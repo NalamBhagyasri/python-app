@@ -1,38 +1,34 @@
 pipeline {
     agent any
-    environment{
-        DOCKER_TAG = "0.0.4"
+    environment {
+         DOCKERHUB_CREDENTIALS = credentials('bhagyasri-dockerhub')
+        
     }
+    
 
     stages {
-        stage('Git Checkout') {
+        stage('Clone Repository') {
             steps {
-                git url:'https://github.com/javahometech/python-app', branch: 'master'
+                // Clone the repository containing your code
+                git 'https://github.com/NalamBhagyasri/python-app'
             }
         }
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
-                sh "docker build -t kammana/pyapp:${DOCKER_TAG} ."
+                // Build Docker image using Dockerfile
+                sh 'docker build -t pyapp:$BUILD_NUMBER .'
             }
         }
-        stage('Docker Login') {
+        stage('login to Docker') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'pwd', usernameVariable: 'usr')]) {
-                    sh "docker login -u ${usr} -p ${pwd}"
-                }
-            }
+                // Push Docker image to Docker repository (e.g., Docker Hub)
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUN_CREDENTIALS_USR --password-stdin'
+            } 
         }
-        stage('Docker Push') {
+        stage('push image') {
             steps {
-               sh "docker push kammana/pyapp:${DOCKER_TAG}"
-            }
-        }
-        stage("Dev Deploy"){
-            steps{
-                sshagent(['docker-ssh']) {
-                    sh "ssh -o StrictHostKeyChecking=no ec2-user@172.31.51.1 docker rm -f pyapp"
-                    sh "ssh  ec2-user@172.31.51.1 docker run -d -p 8080:5000 --name pyapp kammana/pyapp:${DOCKER_TAG}"
-                }
+                // Deploy Docker container using Docker Compose
+                sh 'docker push pyapp:$BUILD_NUMBER'
             }
         }
     }
