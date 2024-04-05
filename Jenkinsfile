@@ -8,7 +8,7 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 // Clone the repository containing your code
-                git 'https://github.com/NalamBhagyasri/python-app' , branch: 'master'
+                git url:'https://github.com/NalamBhagyasri/python-app' , branch: 'master'
             }
         }
         stage('Build Docker Image') {
